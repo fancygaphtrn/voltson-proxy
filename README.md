@@ -1,6 +1,6 @@
 ## voltson-proxy
 
-Control [Etekcity Voltson] smart plugs via your local server rather than Etekcity's cloud.
+Control [Etekcity Voltson] smart plugs via your local mqtt server rather than Etekcity's cloud.  Keeps all data local.
 
 ### Getting started
 
