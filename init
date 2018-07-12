@@ -1,0 +1,15 @@
+[Unit]
+Description=voltson proxy
+After=network.target systemctl  mosquitto.service
+
+[Service]
+Type=simple
+User=voltson-proxy
+ExecStart=/srv/voltson-proxy/bin/voltson-proxy.py
+WorkingDirectory=/srv/voltson-proxy
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=sysinit.target
+
