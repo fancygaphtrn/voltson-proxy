@@ -4,6 +4,9 @@ Control [Etekcity Voltson] smart plugs via your local mqtt server rather than Et
 
 ### Getting started
 
+* I installed in a python virtualenv using Python 3.6.5
+* Uses [paho.mqtt](https://pypi.org/project/paho-mqtt/#client)
+* Uses [python-websocket-server](https://github.com/Pithikos/python-websocket-server)
 * You need to redirect server2.vesync.com to the computer running
   voltlet. With dnsmasq you add a config line like this  "list address '/server2.vesync.com/192.168.1.10'".  Replace 192.168.1.10 with your server IP address
 * Restart your plugs so that they connect to the local server.
@@ -13,7 +16,7 @@ Control [Etekcity Voltson] smart plugs via your local mqtt server rather than Et
 * Send "true" to turn on the plug to `/voltson/{plug-uuid}`
 * Send "false" to turn off the plug to `/voltson/{plug-uuid}`
 * Plugs send "true" or "false" to `/voltson/{plug-uuid}/state` once they've actually changed state. Messages are retained.
-* Plugs send "online" or "offline" to `/voltson/{plug-uuid}/availability` depending on whether they are connected. Messages are retained.
+* Plugs send "online" or "offline" to `/voltson/{plug-uuid}/availability` depending on whether they are connected. Messages are not retained.
 
 #### Home Assistant Example
 
