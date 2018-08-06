@@ -5,38 +5,44 @@ import json
 import paho.mqtt.client as mqtt
 from websocket_server import WebsocketServer
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+#if (log.hasHandlers()):
+#    log.handlers.clear()
 
-# create a logging format
-logging.basicConfig(level=logging.INFO,
-                   format='%(asctime)s %(levelname)s %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-logger.info('Starting')
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+ch.setFormatter(formatter)
+log.addHandler(ch)
 
-MQTTHOST = "localhost"
+log.info('Starting')
+
+MQTTHOST = "home.lan"
 MQTTPORT = 1883
 WSHOST = "0.0.0.0"
 WSPORT = 17273
 
 # The callback for when the client receives a CONNACK response from the server.
 def mqtt_on_connect(client, userdata, flags, rc):
-    logger.info("MQTT Connected with result code "+str(rc))
+    log.info("MQTT Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe("voltson/+/set")
-    logger.info("MQTT Subscribed to voltson/+/set")
+    log.info("MQTT Subscribed to voltson/+/set")
 
 def mqtt_on_disconnect(client, userdata, rc):
-    logger.info("MQTT Disconnected with result code "+str(rc))
+    log.info("MQTT Disconnected with result code "+str(rc))
 
 def mqtt_on_log(client, userdata, level, buf):
-    logger.info("MQTT "+buf)
+    log.info("MQTT "+buf)
 
 
 # The callback for when a PUBLISH message is received from the server.
 def mqtt_on_message(client, userdata, msg):
-    logger.info(msg.topic+" "+str(msg.payload))
+    log.info(msg.topic+" "+str(msg.payload))
     t = msg.topic.split('/')
     found = False
     for x in server.clients:
@@ -46,48 +52,48 @@ def mqtt_on_message(client, userdata, msg):
                     if msg.payload == "true".encode():
                         r = {"uri": "/relay", "action": "open"}
                         server.send_message(x, json.dumps(r))
-                        logger.info("Sending Client(%d): %s %s" % (x['id'], x['info']['id'],json.dumps(r)))
+                        log.info("Sending Client(%d): %s %s" % (x['id'], x['info']['id'],json.dumps(r)))
                     else:
                         r = {"uri": "/relay", "action": "break"}
                         server.send_message(x, json.dumps(r))
-                        logger.info("Sending Client(%d): %s %s" % (x['id'], x['info']['id'],json.dumps(r)))
+                        log.info("Sending Client(%d): %s %s" % (x['id'], x['info']['id'],json.dumps(r)))
                     found = True
     if found == False:
         mqtt_server.publish("voltson/" + t[1] + "/available", "offline", qos=0, retain=False)
-        logger.info("MQTT %s offline", t[1])
+        log.info("MQTT %s offline", t[1])
 
         for x in server.clients:
             if 'info' in x:
                 if 'id' in x['info']:
                     if x['id'] != client['id']:
                         mqtt_server.publish("voltson/" + x['info']['id'] + "/available", "online", qos=0, retain=False)
-                        logger.info("MQTT %s online",x['info']['id'])
+                        log.info("MQTT %s online",x['info']['id'])
 
 
 
 # Called for every client connecting (after handshake)
 def ws_new_client(client, server):
-    logger.info("New client connected id %d" % client['id'])
+    log.info("New client connected id %d" % client['id'])
 
 # Called for every client disconnecting
 def ws_client_left(client, server):
     mqtt_server.publish("voltson/" + client['info']['id'] + "/available", "offline", qos=0, retain=False)
-    logger.info("MQTT %s offline",client['info']['id'])
-    logger.info("Client(%d) disconnected" % client['id'])
+    log.info("MQTT %s offline",client['info']['id'])
+    log.info("Client(%d) disconnected" % client['id'])
 
     for x in server.clients:
         if 'info' in x:
             if 'id' in x['info']:
                 if x['id'] != client['id']:
                     mqtt_server.publish("voltson/" + x['info']['id'] + "/available", "online", qos=0, retain=False)
-                    logger.info("MQTT %s online",x['info']['id'])
+                    log.info("MQTT %s online",x['info']['id'])
 
 
 
 # Called when a client sends a message
 def ws_message_received(client, server, message):
     
-    logger.info("Received Client(%d): %s" % (client['id'], message))
+    log.info("Received Client(%d): %s" % (client['id'], message))
 
     now = datetime.datetime.now()
 
@@ -104,10 +110,10 @@ def ws_message_received(client, server, message):
         r = {"uri": "/loginReply", "error":0, "wd":3, "year": 2017, "month":11, "day":1, "ms":62125134, "hh":0, "hl":0, "lh":0, "ll":0}
 
         server.send_message(client, json.dumps(r))
-        logger.info("Sending Client(%d): %s" % (client['id'], json.dumps(r)))
+        log.info("Sending Client(%d): %s" % (client['id'], json.dumps(r)))
 
         mqtt_server.publish("voltson/" + client['info']['id'] + "/available", "online", qos=0, retain=False)
-        logger.info("MQTT %s online",client['info']['id'])
+        log.info("MQTT %s online",client['info']['id'])
 
         if m['relay'] == "open":
             mqtt_server.publish("voltson/" + client['info']['id'] + "/state", "true", qos=0, retain=True)
@@ -133,12 +139,17 @@ def ws_message_received(client, server, message):
         if m['uri'] == "/ka":
 
             mqtt_server.publish("voltson/" + client['info']['id'] + "/available", "online", qos=0, retain=False)
-            logger.info("MQTT %s online",client['info']['id'])
+            log.info("MQTT %s online",client['info']['id'])
 
             client['info']['rssi'] = m['rssi']
             r = {"uri":"/kr","error":0,"wd":3,"year":2017,"month":11,"day":1,"ms":62482912}
             server.send_message(client, json.dumps(r))
-            logger.info("Sending Client(%d): %s" % (client['id'], json.dumps(r)))
+            log.info("Sending Client(%d): %s" % (client['id'], json.dumps(r)))
+
+        if m['uri'] == "/kr":
+
+            mqtt_server.publish("voltson/" + client['info']['id'] + "/available", "online", qos=0, retain=False)
+            log.info("MQTT %s online",client['info']['id'])
 
         if m['uri'] == "/report":
             client['info']['e'] = m['e']
@@ -146,27 +157,27 @@ def ws_message_received(client, server, message):
 
             #p = str(round(int(m['e'], 16) / int(m['t'], 16),2))
             #mqtt_server.publish("voltson/" + client['info']['id'] + "/power", p , qos=0, retain=False)
-            #logger.info("MQTT %s power %s",client['info']['id'], p)
+            #log.info("MQTT %s power %s",client['info']['id'], p)
 
 
-    #logger.info("Info Client(%d): %s" % (client['id'], client['info']))
+    #log.info("Info Client(%d): %s" % (client['id'], client['info']))
 
 def heartbeat():
     while True:
 
         r = {"uri":"/ka"}
         server.send_message_to_all(json.dumps(r))
-        logger.info("Sending ka Heartbeat to all clients")
+        log.info("Sending ka Heartbeat to all clients")
 
 
         #r = {"uri":"/getRuntime"}
         #server.send_message_to_all(json.dumps(r))
-        #logger.info("Sending getRuntime to all clients")
+        #log.info("Sending getRuntime to all clients")
 
         #for x in server.clients:
         #    r = {"uri":"/ka"}
         #    server.send_message(x, json.dumps(r))
-        #    logger.info("Sending Heartbeat Client(%d): %s" % (x['id'],json.dumps(r)))
+        #    log.info("Sending Heartbeat Client(%d): %s" % (x['id'],json.dumps(r)))
 
         time.sleep(5)
 
@@ -190,17 +201,13 @@ t.daemon = True
 t.start()
 
 try:
-    logger.info("Listening on port %d for clients.." % server.port)
+    log.info("Listening on port %d for clients.." % server.port)
     server.serve_forever()
 except KeyboardInterrupt:
     server.server_close()
     mqtt_server.loop_stop()
-    logger.info("Server terminated.")
+    log.info("Server terminated.")
 except Exception as e:
-    logger.error(str(e), exc_info=True)
+    log.error(str(e), exc_info=True)
 
-logger.info('Ending')
-
-
-
-
+log.info('Ending')
