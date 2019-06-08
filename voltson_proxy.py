@@ -134,6 +134,16 @@ def ws_message_received(client, server, message):
                 mqtt_server.publish("voltson/" + client['info']['id'] + "/state", "true", qos=0, retain=True)
             else:
                 mqtt_server.publish("voltson/" + client['info']['id'] + "/state", "false", qos=0, retain=True)
+                
+            p = m['power'].split(':')
+            v = m['voltage'].split(':')
+
+            r = {}
+            r["instantpower"]   = int(p[0],16)/4096
+            r["avgpower"]       = int(p[1],16)/4096
+            r["instantvoltage"] = int(v[0],16)/4096
+            r["avgvoltage"]     = int(v[1],16)/4096
+            mqtt_server.publish("voltson/" + client['info']['id'] + "/energy", json.dumps(r), qos=0, retain=False)
 
         # server message send via heartbeat {"uri":"/kr","error":0,"wd":3,"year":2017,"month":11,"day":1,"ms":62482912}
         if m['uri'] == "/ka":
@@ -165,14 +175,14 @@ def ws_message_received(client, server, message):
 def heartbeat():
     while True:
 
-        r = {"uri":"/ka"}
-        server.send_message_to_all(json.dumps(r))
-        log.info("Sending ka Heartbeat to all clients")
-
-
-        #r = {"uri":"/getRuntime"}
+        #r = {"uri":"/ka"}
         #server.send_message_to_all(json.dumps(r))
-        #log.info("Sending getRuntime to all clients")
+        #log.info("Sending ka Heartbeat to all clients")
+
+
+        r = {"uri":"/getRuntime"}
+        server.send_message_to_all(json.dumps(r))
+        log.info("Sending getRuntime to all clients")
 
         #for x in server.clients:
         #    r = {"uri":"/ka"}
