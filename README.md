@@ -17,10 +17,11 @@ Control [Etekcity Voltson] smart plugs via your local mqtt server rather than Et
 * Send "false" to turn off the plug to `/voltson/{plug-uuid}`
 * Plugs send "true" or "false" to `/voltson/{plug-uuid}/state` once they've actually changed state. Messages are retained.
 * Plugs send "online" or "offline" to `/voltson/{plug-uuid}/availability` depending on whether they are connected. Messages are not retained.
-
+* Plugs send json {"instantpower": 9.098388671875, "avgpower": 9.094970703125, "instantvoltage": 121.09814453125, "avgvoltage": 120.196044921875} to `/voltson/{plug-uuid}/energy` Messages are not retained.
 #### Home Assistant Example
 
 ```
+switch:
   - platform: mqtt
     command_topic: "/voltson/UUID-GOES-HERE"
     state_topic: "/voltson/UUID-GOES-HERE/state"
@@ -28,6 +29,21 @@ Control [Etekcity Voltson] smart plugs via your local mqtt server rather than Et
     retain: true
     payload_on: 'true'
     payload_off: 'false'
+```
+
+```
+sensor:
+  - platform: mqtt
+    name: "Spare Vesync switch power"
+    state_topic: "voltson/UUID-GOES-HERE/energy"
+    unit_of_measurement: "W"
+    value_template: '{{ value_json.instantpower|int }}'
+  - platform: mqtt
+    name: "Spare Vesync switch voltage"
+    state_topic: "voltson/UUID-GOES-HERE/energy"
+    unit_of_measurement: "V"
+    value_template: '{{ value_json.instantvoltage|int }}'
+
 ```
 
 ### References
