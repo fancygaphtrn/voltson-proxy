@@ -129,6 +129,10 @@ def ws_message_received(client, server, message):
                 mqtt_server.publish("voltson/" + client['info']['id'] + "/state", "false", qos=0, retain=True)
 
         if m['uri'] == "/runtimeInfo":
+
+            mqtt_server.publish("voltson/" + client['info']['id'] + "/available", "online", qos=0, retain=False)
+            log.info("MQTT %s online",client['info']['id'])
+
             client['info']['relay'] = m['relay']
             if m['relay'] == "open":
                 mqtt_server.publish("voltson/" + client['info']['id'] + "/state", "true", qos=0, retain=True)
@@ -221,3 +225,7 @@ except Exception as e:
     log.error(str(e), exc_info=True)
 
 log.info('Ending')
+
+
+
+
