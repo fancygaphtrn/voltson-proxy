@@ -142,25 +142,31 @@ def ws_message_received(client, server, message):
             p = m['power'].split(':')
             v = m['voltage'].split(':')
 
+            publish = true
             r = {}
             #Get massive spikes sometimes.   Switch is rated at 8A at 120v so using 1000 for power and 130 for voltage
             r["instantpower"]   = int(p[0],16)/4096
             if r["instantpower"] >= 1000:
                 r["instantpower"] = 1000
-
+                publish = false
+                
             r["avgpower"]       = int(p[1],16)/4096
             if r["avgpower"] >= 1000:
                 r["avgpower"] = 1000
+                publish = false
 
             r["instantvoltage"] = int(v[0],16)/4096
             if r["instantvoltage"] >= 130:
                 r["instantvoltage"] = 130
+                publish = false
 
             r["avgvoltage"]     = int(v[1],16)/4096
             if r["avgvoltage"] >= 130:
                 r["avgvoltage"] = 130
+                publish = false
 
-            mqtt_server.publish("voltson/" + client['info']['id'] + "/energy", json.dumps(r), qos=0, retain=False)
+            if publish:
+                mqtt_server.publish("voltson/" + client['info']['id'] + "/energy", json.dumps(r), qos=0, retain=False)
 
         # server message send via heartbeat {"uri":"/kr","error":0,"wd":3,"year":2017,"month":11,"day":1,"ms":62482912}
         if m['uri'] == "/ka":
