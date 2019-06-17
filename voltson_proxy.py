@@ -206,7 +206,7 @@ def heartbeat():
         #    server.send_message(x, json.dumps(r))
         #    log.info("Sending Heartbeat Client(%d): %s" % (x['id'],json.dumps(r)))
 
-        time.sleep(5)
+        time.sleep(30)
 
 
 server = WebsocketServer(WSPORT, host=WSHOST)
