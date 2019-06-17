@@ -142,28 +142,28 @@ def ws_message_received(client, server, message):
             p = m['power'].split(':')
             v = m['voltage'].split(':')
 
-            publish = true
+            publish = True
             r = {}
             #Get massive spikes sometimes.   Switch is rated at 8A at 120v so using 1000 for power and 130 for voltage
             r["instantpower"]   = int(p[0],16)/4096
             if r["instantpower"] >= 1000:
                 r["instantpower"] = 1000
-                publish = false
+                publish = False
                 
             r["avgpower"]       = int(p[1],16)/4096
             if r["avgpower"] >= 1000:
                 r["avgpower"] = 1000
-                publish = false
+                publish = False
 
             r["instantvoltage"] = int(v[0],16)/4096
             if r["instantvoltage"] >= 130:
                 r["instantvoltage"] = 130
-                publish = false
+                publish = False
 
             r["avgvoltage"]     = int(v[1],16)/4096
             if r["avgvoltage"] >= 130:
                 r["avgvoltage"] = 130
-                publish = false
+                publish = False
 
             if publish:
                 mqtt_server.publish("voltson/" + client['info']['id'] + "/energy", json.dumps(r), qos=0, retain=False)
